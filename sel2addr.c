@@ -195,17 +195,20 @@ int main(int argc, char** argv) {
     }
     RSOHeader rso;
     fread(&rso, sizeof(RSOHeader), 1, fp);
+    unsigned int table_size = BE(rso.export_table.size);
+    unsigned int table_offset = BE(rso.export_table.offset);
+    unsigned int names_offset = BE(rso.export_names_offset);
     // allocate the size of the export table
-    RSOSymbolEntry *table = malloc(BE(rso.export_table.size));
+    RSOSymbolEntry *table = malloc(table_size);
     if (table == NULL) {
         // whooups...
         fclose(fp);
         printf("input SEL file too big, or out of memory\n");
         return -1;
     }
-    int num_entries = BE(rso.export_table.size) / sizeof(RSOSymbolEntry);
+    int num_entries = table_size / sizeof(RSOSymbolEntry);
     // load the export table into the array
-    fseek(fp, BE(rso.export_table.offset), SEEK_SET);
+    fseek(fp, table_offset, SEEK_SET);
     fread(table, num_entries, sizeof(RSOSymbolEntry), fp);
 
     // iterate through each entry
@@ -214,12 +217,15 @@ int main(int argc, char** argv) {
         RSOSymbolEntry entry = table[i];
         // if the section is too big, ignore it
         if (BE(entry.section) > NUM_SECTIONS) continue;
+        unsigned int entry_sect = BE(entry.section);
+        unsigned int entry_offset = BE(entry.offset);
         // get the address of the entry from the table
-        unsigned int entry_addr = sections[BE(entry.section)] + BE(entry.offset);
+        unsigned int entry_addr = sections[entry_sect] + entry_offset;
         // if the address is zero somehow, ignore it
         if (entry_addr == 0) continue;
         // read the entry's name from the file
-        fseek(fp, BE(rso.export_names_offset) + BE(entry.name_offset), SEEK_SET);
+        unsigned int name_offset = BE(entry.name_offset);
+        fseek(fp, names_offset + name_offset, SEEK_SET);
         fread(entry_name, 1, sizeof(entry_name), fp);
         // print out the info
         printf("0x%08x = %s\n", entry_addr, entry_name);

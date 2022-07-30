@@ -75,7 +75,7 @@ bool FindRSOSections(void *datablob, unsigned int datasize, unsigned int section
     if (find_signature == NULL)
         return false;
     void * RSOStaticLocateObject_addr = find_signature - RSOStaticLocateObject_Offset;
-    printf("0x%08x = RSOStaticLocateObject\n", (unsigned int)(RSOStaticLocateObject_addr - datablob + baseaddr));
+    printf("RSOStaticLocateObject 0x%08x f\n", (unsigned int)(RSOStaticLocateObject_addr - datablob + baseaddr));
     // iterate through each instruction and parse the result
     for (void * i = RSOStaticLocateObject_addr; i < RSOStaticLocateObject_addr + RSOStaticLocateObject_Header; i += 4) {
         // read the instruction
@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
         fseek(fp, BE(rso.export_names_offset) + BE(entry.name_offset), SEEK_SET);
         fread(entry_name, 1, sizeof(entry_name), fp);
         // print out the info
-        printf("0x%08x = %s\n", entry_addr, entry_name);
+        printf("%s 0x%08x %c\n",  entry_name, entry_addr, (BE(entry.section) < 3) ? 'f' : 'l');
     }
 
     // clean up after ourselves

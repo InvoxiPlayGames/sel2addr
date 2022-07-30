@@ -42,7 +42,7 @@ jobs:
       with:
         update: true
         install: >-
-          base-devel gcc
+          base-devel gcc mingw-w64-x86_64-toolchain
     - name: Checkout
       uses: actions/checkout@v3
     - name: Compile

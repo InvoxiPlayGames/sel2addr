@@ -160,6 +160,25 @@ int main(int argc, char** argv) {
             found_sections = FindRSOSections(secbuffer, BE(dol_header->textsizes[i]), sections, BE(dol_header->textloading[i]));
             free(secbuffer);
         }
+        // just in case, check data segments as well
+        for (int i = 0; i < DOL_DATA_SECTIONS && !found_sections; i++) {
+            // if load address is null, just skip over it, its unsafe to do this
+            if (BE(dol_header->dataloading[i]) == 0) continue;
+            // allocate a buffer for the DOL segment
+            void *secbuffer = malloc(BE(dol_header->datasizes[i]));
+            if (secbuffer == NULL) {
+                // whooups...
+                fclose(fp);
+                printf("input game file too big, or out of memory\n");
+                return -1;
+            }
+            // seek to where the DOL segment begins and read through it
+            fseek(fp, BE(dol_header->dataoffset[i]), SEEK_SET);
+            fread(secbuffer, 1, BE(dol_header->datasizes[i]), fp);
+            // get the RSO section offsets
+            found_sections = FindRSOSections(secbuffer, BE(dol_header->datasizes[i]), sections, BE(dol_header->dataloading[i]));
+            free(secbuffer);
+        }
     } else { // ELF isn't implemented, this will work right?
         // get the filesize
         fseek(fp, 0, SEEK_END);

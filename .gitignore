@@ -5,6 +5,7 @@
 *.bin
 *.raw
 *.dmp
+*.log
 # binary file
 sel2addr
 *.arm64

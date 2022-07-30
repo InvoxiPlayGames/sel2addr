@@ -1,0 +1,5 @@
+# ignore if we have any leftovers
+*.sel
+*.dol
+# binary file
+sel2addr

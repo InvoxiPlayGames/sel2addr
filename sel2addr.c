@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-// have to define that to get it to compile with gcc
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -38,6 +36,20 @@ static unsigned int RSOStaticLocateObject_Offset = 0xC0;
 // the length of the fuction to actually check
 static unsigned int RSOStaticLocateObject_Header = 0x100;
 
+// Some Platforms Don't Have Memmem... so we have to use our own!
+// thank you random stackoverflow citizen
+void *own_memmem(const void *haystack, size_t haystack_len, const void * const needle, const size_t needle_len)
+{
+    if (haystack == NULL) return NULL;
+    if (haystack_len == 0) return NULL;
+    if (needle == NULL) return NULL;
+    if (needle_len == 0) return NULL;
+    for (const char *h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
+        if (!memcmp(h, needle, needle_len)) return (void *)h;
+    }
+    return NULL;
+}
+
 // returns the input format so we can load everything efficient and properly
 FileFormat GetInputFormat(void *first_100h) {
     // elf files start with... elf!
@@ -58,7 +70,7 @@ FileFormat GetInputFormat(void *first_100h) {
 
 bool FindRSOSections(void *datablob, unsigned int datasize, unsigned int sections[14], unsigned int baseaddr) {
     // find the RSOStaticLocateObject function in the game
-    void * find_signature = memmem(datablob, datasize - sizeof(RSOStaticLocateObject_Signature), RSOStaticLocateObject_Signature, sizeof(RSOStaticLocateObject_Signature));
+    void * find_signature = own_memmem(datablob, datasize - sizeof(RSOStaticLocateObject_Signature), RSOStaticLocateObject_Signature, sizeof(RSOStaticLocateObject_Signature));
     // if we can't find it, don't bother
     if (find_signature == NULL)
         return false;
@@ -108,7 +120,7 @@ int main(int argc, char** argv) {
     }
 
     // load the game file, and detect the format
-    FILE *fp = fopen(argv[1], "r");
+    FILE *fp = fopen(argv[1], "rb");
     if (fp == NULL) {
         printf("failed to open '%s'\n", argv[1]);
         return -1;
@@ -176,7 +188,7 @@ int main(int argc, char** argv) {
     }
 
     // open the RSO file, and read its header
-    fp = fopen(argv[2], "r");
+    fp = fopen(argv[2], "rb");
     if (fp == NULL) {
         printf("failed to open '%s'\n", argv[1]);
         return -1;
@@ -204,6 +216,8 @@ int main(int argc, char** argv) {
         if (BE(entry.section) > NUM_SECTIONS) continue;
         // get the address of the entry from the table
         unsigned int entry_addr = sections[BE(entry.section)] + BE(entry.offset);
+        // if the address is zero somehow, ignore it
+        if (entry_addr == 0) continue;
         // read the entry's name from the file
         fseek(fp, BE(rso.export_names_offset) + BE(entry.name_offset), SEEK_SET);
         fread(entry_name, 1, sizeof(entry_name), fp);

@@ -27,7 +27,7 @@ typedef struct _RSOHeader {
     unsigned int export_names_offset;
     RSOOffsetSize import_table;
     unsigned int import_names_offset;
-} RSOHeader;
+} __attribute__((packed)) RSOHeader;
 
 typedef struct _RSOSymbolEntry {
     unsigned int name_offset;

@@ -31,3 +31,24 @@ jobs:
       with: 
         name: sel2addr-macos
         path: sel2addr
+  Windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          base-devel gcc
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Compile
+      run: gcc sel2addr.c -o sel2addr.exe
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with: 
+        name: sel2addr-windows
+        path: sel2addr.exe

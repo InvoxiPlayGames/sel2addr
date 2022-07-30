@@ -1,0 +1,33 @@
+name: Build
+
+on: [push]
+
+jobs:
+  Linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Compile
+      run: cc sel2addr.c -o sel2addr
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with: 
+        name: sel2addr-linux
+        path: sel2addr
+  macOS:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Compile (x86_64)
+      run: cc sel2addr.c -target x86_64-apple-darwin-macho -o sel2addr.x86_64
+    - name: Compile (arm64)
+      run: cc sel2addr.c -target arm64-apple-darwin-macho -o sel2addr.arm64
+    - name: Merge
+      run: lipo sel2addr.arm64 sel2addr.x86_64 -create -output sel2addr
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with: 
+        name: sel2addr-macos
+        path: sel2addr

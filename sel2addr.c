@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+// have to define that to get it to compile with gcc
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>

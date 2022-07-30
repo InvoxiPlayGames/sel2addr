@@ -1,5 +1,11 @@
 # ignore if we have any leftovers
 *.sel
 *.dol
+*.elf
+*.bin
+*.raw
+*.dmp
 # binary file
 sel2addr
+*.arm64
+*.x86_64
